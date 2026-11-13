@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Utilidad y Aplicación Clínica en Genética</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent: #38bdf8;
+            --accent-hover: #0ea5e9;
+            --success: #22c55e;
+            --error: #ef4444;
+            --border: #334155;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 850px;
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border);
+        }
+
+        h1 {
+            color: var(--accent);
+            text-align: center;
+            margin-bottom: 5px;
+            font-size: 1.7rem;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 25px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            background-color: var(--border);
+            border-radius: 8px;
+            height: 10px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background-color: var(--accent);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .question-counter {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        .question-text {
+            font-size: 1.05rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+
+        .option-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 2px solid var(--border);
+            padding: 14px 18px;
+            border-radius: 10px;
+            color: var(--text-primary);
+            text-align: left;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background: rgba(56, 189, 248, 0.05);
+            border-color: var(--accent);
+        }
+
+        .option-btn.correct {
+            background: rgba(34, 197, 94, 0.15) !important;
+            border-color: var(--success) !important;
+            color: #dcfce7;
+        }
+
+        .option-btn.incorrect {
+            background: rgba(239, 68, 68, 0.15) !important;
+            border-color: var(--error) !important;
+            color: #fee2e2;
+        }
+
+        .option-letter {
+            font-weight: bold;
+            color: var(--accent);
+            min-width: 24px;
+        }
+
+        .feedback-box {
+            background: rgba(15, 23, 42, 0.8);
+            border-left: 4px solid var(--accent);
+            padding: 15px;
+            border-radius: 0 10px 10px 0;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            line-height: 1.4;
+            display: none;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .btn {
+            background-color: var(--accent);
+            color: #0f172a;
+            border: none;
+            padding: 12px 24px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .btn:hover {
+            background-color: var(--accent-hover);
+        }
+
+        .btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .results-container {
+            text-align: center;
+        }
+
+        .score-display {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--accent);
+            margin: 20px 0;
+        }
+
+        .review-list {
+            text-align: left;
+            max-height: 350px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            padding-right: 10px;
+        }
+
+        .review-item {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            font-size: 0.85rem;
+        }
+
+        .review-item.is-correct { border-left: 4px solid var(--success); }
+        .review-item.is-incorrect { border-left: 4px solid var(--error); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="quiz-view">
+        <h1>Utilidad y Aplicación Clínica</h1>
+        <div class="subtitle">Evaluación de la función y momento de uso de pruebas y terapias genéticas</div>
+        
+        <div class="progress-bar">
+            <div class="progress-fill" id="progress-fill"></div>
+        </div>
+        
+        <div class="question-counter" id="question-counter">Pregunta 1 de 12</div>
+        <div class="question-text" id="question-text">Cargando...</div>
+        
+        <div class="options-list" id="options-list"></div>
+
+        <div class="feedback-box" id="feedback-box"></div>
+
+        <div class="controls">
+            <button class="btn" id="next-btn" onclick="nextQuestion()" disabled>Siguiente Pregunta</button>
+        </div>
+    </div>
+
+    <div id="results-view" class="results-container" style="display: none;">
+        <h1>¡Examen Finalizado!</h1>
+        <div class="subtitle">Desglose de tu conocimiento sobre utilidad clínica</div>
+        
+        <div class="score-display" id="score-display">0 / 12</div>
+        <p id="score-message">Analizando resultados...</p>
+        
+        <div class="review-list" id="review-list"></div>
+
+        <button class="btn" onclick="restartQuiz()">Reiniciar Simulador</button>
+    </div>
+</div>
+
+<script>
+    const questions = [
+        {
+            question: "1. ¿Cuál es la utilidad clínica principal del Cariotipo en la práctica médica?",
+            options: [
+                { letter: "A", text: "Secuenciar exones individuales para buscar mutaciones puntuales en el cáncer de mama." },
+                { letter: "B", text: "Visualizar el mapa completo de cromosomas metafásicos para detectar aneuplodías (trisomías/monosomías) y grandes reordenamientos estructurales mayores de 5-10 Mb." },
+                { letter: "C", text: "Modificar post-transcripcionalmente el ARN mensajero hepático." },
+                { letter: "D", text: "Amplificar fragmentos de ADN bacteriano en medicina forense." }
+            ],
+            correct: 1,
+            explanation: "El Cariotipo se usa para un análisis macroscópico global de la dotación cromosómica (como en Síndrome de Down o translocaciones parentales grandes)."
+        },
+        {
+            question: "2. ¿En qué escenario clínico se debe solicitar la técnica FISH (Hibridación In Situ Fluorescente)?",
+            options: [
+                { letter: "A", text: "Para la detección rápida de microdeleciones específicas (ej. DiGeorge) o trisomías fetales en pocas horas utilizando sondas fluorescentes sobre núcleos en interfase o metafase." },
+                { letter: "B", text: "Para secuenciar simultáneamente 20,000 genes del exoma humano." },
+                { letter: "C", text: "Para producir insulina recombinante en bacterias." },
+                { letter: "D", text: "Para realizar un estudio poblacional de asociación de polimorfismos (GWAS)." }
+            ],
+            correct: 0,
+            explanation: "La FISH se utiliza cuando se busca una alteración cromosómica o microdeleción dirigida conocida, permitiendo resultados rápidos sin cultivo prolongado."
+        },
+        {
+            question: "3. ¿Cuál es la utilidad diagnóstica del aCGH (Hibridación Genómica Comparativa en Array)?",
+            options: [
+                { letter: "A", text: "Detectar microdeleciones y microduplicaciones submicroscópicas (Variaciones en el Número de Copias - CNVs) a una resolución muy superior al cariotipo." },
+                { letter: "B", text: "Editar genomas mediante endonucleasas guiadas por ARN." },
+                { letter: "C", text: "Cortar ADN con enzimas de restricción para plásmidos." },
+                { letter: "D", text: "Revisar la expresión de PD-L1 en biopsias de pulmón." }
+            ],
+            correct: 0,
+            explanation: "El aCGH es el estándar de oro inicial en retraso global del desarrollo o malformaciones congénitas para detectar ganancias y pérdidas de material (CNVs) de alta resolución."
+        },
+        {
+            question: "4. ¿Cuándo está indicado el Mapeo Óptico del Genoma (OGM)?",
+            options: [
+                { letter: "A", text: "Para amplificar PCR en tiempo real de virus respiratorios." },
+                { letter: "B", text: "Para analizar moléculas de ADN ultralargas y detectar variantes estructurales complejas, grandes inversiones o inserciones crípticas invisibles en NGS o arrays." },
+                { letter: "C", text: "Para calcular el riesgo poligénico de diabetes mellitus tipo 2." },
+                { letter: "D", text: "Para recetar warfarina según el metabolismo hepático." }
+            ],
+            correct: 1,
+            explanation: "El OGM destaca en genómica avanzada para visualizar arquitectura estructural intacta de gran tamaño sin los sesgos de fragmentación corta."
+        },
+        {
+            question: "5. ¿Cuál es la utilidad fundamental de la PCR (Reacción en Cadena de la Polimerasa)?",
+            options: [
+                { letter: "A", text: "Sustituir genes defectuosos en neuronas mediante vectores virales AAV." },
+                { letter: "B", text: "Amplificar exponencialmente millones de copias de un fragmento específico de ADN para hacerlo detectable en diagnóstico infeccioso, forense o molecular." },
+                { letter: "C", text: "Secuenciar todo el genoma humano simultáneamente en paralelo." },
+                { letter: "D", text: "Bloquear la traducción de proteínas en el ribosoma." }
+            ],
+            correct: 1,
+            explanation: "La PCR es la herramienta base de amplificación molecular necesaria antes de casi cualquier análisis genético detallado."
+        },
+        {
+            question: "6. ¿Para qué se utiliza la Secuenciación (Sanger / NGS - Next-Generation Sequencing)?",
+            options: [
+                { letter: "A", text: "Para leer con precisión el orden exacto de los nucleótidos de un gen, panel o exoma, permitiendo identificar mutaciones puntuales causantes de enfermedades monogénicas o cáncer." },
+                { letter: "B", text: "Para purificar proteínas recombinantes en cultivos de levaduras." },
+                { letter: "C", text: "Para contar cromosomas completos al microscopio óptico." },
+                { letter: "D", text: "Para evaluar la respuesta a nutrientes según la dieta." }
+            ],
+            correct: 0,
+            explanation: "La secuenciación lee la secuencia base por base, siendo indispensable para mutaciones puntuales y diagnóstico de precisión."
+        },
+        {
+            question: "7. ¿Cuál es la aplicación terapéutica principal del sistema CRISPR-Cas9?",
+            options: [
+                { letter: "A", text: "Vigilar las concentraciones de warfarina en sangre periférica." },
+                { letter: "B", text: "Realizar una edición genómica de precisión quirúrgica, cortando y corrigiendo secuencias de ADN patógenas específicas en el genoma." },
+                { letter: "C", text: "Hibridar sondas fluorescentes en metafase." },
+                { letter: "D", text: "Realizar estudios poblacionales masivos (GWAS)." }
+            ],
+            correct: 1,
+            explanation: "CRISPR es una herramienta de edición molecular dirigida capaz de corregir errores genéticos a nivel de secuencia de ADN."
+        },
+        {
+            question: "8. ¿Cuándo se emplea la Terapia Génica en la práctica clínica experimental y avanzada?",
+            options: [
+                { letter: "A", text: "Cuando se requiere introducir un gen funcional mediante vectores (ej. virales) para restaurar de forma duradera la producción de una proteína ausente en células (ej. post-mitóticas)." },
+                { letter: "B", text: "Cuando se necesita amplificar ADN en un termociclador de laboratorio." },
+                { letter: "C", text: "Cuando se busca bloquear temporalmente un ARN mensajero con oligonucleótidos." },
+                { letter: "D", text: "Cuando se cultivan bacterias con plásmidos de insulina." }
+            ],
+            correct: 0,
+            explanation: "La terapia génica busca suplir de forma estable o duradera un déficit genético mediante la entrega de material genético funcional."
+        },
+        {
+            question: "9. ¿Cuál es la utilidad clínica de la Terapia con ARN (como oligonucleótidos antisentido - ASOs)?",
+            options: [
+                { letter: "A", text: "Modular post-transcripcionalmente la expresión génica bloqueando o modificando el ARN mensajero antes de que se traduzca en una proteína tóxica o anómala, de forma reversible." },
+                { letter: "B", text: "Insertar ADN permanente en los cromosomas nucleares humanos." },
+                { letter: "C", text: "Realizar un cariotipo de alta resolución." },
+                { letter: "D", text: "Detectar polimorfismos de un solo nucleótido en estudios de población." }
+            ],
+            correct: 0,
+            explanation: "Las terapias basadas en ARN actúan a nivel del transcrito (ARNm) sin alterar permanentemente el ADN genómico del paciente."
+        },
+        {
+            question: "10. ¿Para qué se utiliza la tecnología de ADN Recombinante en la industria biomédica?",
+            options: [
+                { letter: "A", text: "Para diagnosticar síndromes de microdeleción en niños." },
+                { letter: "B", text: "Para unir fragmentos de ADN de diferentes fuentes e insertarlos en vectores de expresión (plásmidos) cultivados en microorganismos para producir proteínas terapéuticas puras (ej. insulina)." },
+                { letter: "C", text: "Para realizar análisis estadísticos en estudios GWAS." },
+                { letter: "D", text: "Para secuenciar exomas clínicos completos mediante NGS." }
+            ],
+            correct: 1,
+            explanation: "El ADN recombinante es la base de la biotecnología moderna para fabricar fármacos biológicos y proteínas a escala industrial."
+        },
+        {
+            question: "11. ¿Cuál es el propósito fundamental de un estudio GWAS (Estudios de Asociación de Genoma Completo)?",
+            options: [
+                { letter: "A", text: "Diagnosticar una enfermedad monogénica rara en un paciente individual en el hospital." },
+                { letter: "B", text: "Identificar asociaciones estadísticas entre millones de variantes genéticas comunes (SNPs) y enfermedades multifactoriales complejas (ej. diabetes, HTA) en grandes poblaciones." },
+                { letter: "C", text: "Secuenciar paneles de oncología de precisión tumoral." },
+                { letter: "D", text: "Modificar quirúrgicamente el ADN con CRISPR." }
+            ],
+            correct: 1,
+            explanation: "Los GWAS son herramientas puramente poblacionales e investigacionales orientadas a hallar factores de susceptibilidad en enfermedades complejas."
+        },
+        {
+            question: "12. ¿Cuál es la utilidad clínica de las Ómicas (Farmacogenética, Nutrigenética, Inmunohistoquímica)?",
+            options: [
+                { letter: "A", text: "La Farmacogenética optimiza fármacos según el metabolismo genético; la Nutrigenética guía la dieta según variantes metabólicas; la Inmunohistoquímica detecta proteínas tisulares para onco-diagnóstico." },
+                { letter: "B", text: "Todas ellas realizan cariotipos convencionales en banda G." },
+                { letter: "C", text: "Amplifican copias de ADN viral mediante PCR." },
+                { letter: "D", text: "Construyen mapas ópticos de moléculas de ADN ultra-largas." }
+            ],
+            correct: 0,
+            explanation: "Estas herramientas ómicas y auxiliares personalizan la medicina integrando el perfil genético, la respuesta metabólica y la expresión de marcadores tisulares."
+        }
+    ];
+
+    let currentQuestion = 0;
+    let score = 0;
+    let userAnswers = new Array(questions.length).fill(null);
+    let answeredCurrent = false;
+
+    const questionCounterEl = document.getElementById("question-counter");
+    const questionTextEl = document.getElementById("question-text");
+    const optionsListEl = document.getElementById("options-list");
+    const feedbackBoxEl = document.getElementById("feedback-box");
+    const nextBtnEl = document.getElementById("next-btn");
+    const progressFillEl = document.getElementById("progress-fill");
+    
+    const quizViewEl = document.getElementById("quiz-view");
+    const resultsViewEl = document.getElementById("results-view");
+    const scoreDisplayEl = document.getElementById("score-display");
+    const scoreMessageEl = document.getElementById("score-message");
+    const reviewListEl = document.getElementById("review-list");
+
+    function loadQuestion() {
+        answeredCurrent = false;
+        feedbackBoxEl.style.display = "none";
+        nextBtnEl.disabled = true;
+
+        const q = questions[currentQuestion];
+        questionCounterEl.innerText = `Pregunta ${currentQuestion + 1} de ${questions.length}`;
+        questionTextEl.innerText = q.question;
+        
+        progressFillEl.style.width = `${(currentQuestion / questions.length) * 100}%`;
+
+        optionsListEl.innerHTML = "";
+        q.options.forEach((opt, index) => {
+            const btn = document.createElement("button");
+            btn.className = "option-btn";
+            btn.innerHTML = `<span class="option-letter">${opt.letter}.</span> <span>${opt.text}</span>`;
+            btn.onclick = () => selectOption(index);
+            optionsListEl.appendChild(btn);
+        });
+    }
+
+    function selectOption(selectedIndex) {
+        if (answeredCurrent) return;
+        answeredCurrent = true;
+
+        const q = questions[currentQuestion];
+        userAnswers[currentQuestion] = selectedIndex;
+
+        const optionButtons = optionsListEl.getElementsByClassName("option-btn");
+        
+        for (let i = 0; i < optionButtons.length; i++) {
+            optionButtons[i].disabled = true;
+            if (i === q.correct) {
+                optionButtons[i].classList.add("correct");
+            } else if (i === selectedIndex && selectedIndex !== q.correct) {
+                optionButtons[i].classList.add("incorrect");
+            }
+        }
+
+        if (selectedIndex === q.correct) {
+            score++;
+            feedbackBoxEl.innerHTML = `<strong>¡Correcto!</strong> ${q.explanation}`;
+            feedbackBoxEl.style.borderLeftColor = "var(--success)";
+        } else {
+            feedbackBoxEl.innerHTML = `<strong>Incorrecto.</strong> ${q.explanation}`;
+            feedbackBoxEl.style.borderLeftColor = "var(--error)";
+        }
+
+        feedbackBoxEl.style.display = "block";
+        nextBtnEl.disabled = false;
+
+        if (currentQuestion === questions.length - 1) {
+            nextBtnEl.innerText = "Ver Resultados";
+        }
+    }
+
+    function nextQuestion() {
+        currentQuestion++;
+        if (currentQuestion < questions.length) {
+            loadQuestion();
+            nextBtnEl.innerText = "Siguiente Pregunta";
+        } else {
+            showResults();
+        }
+    }
+
+    function showResults() {
+        quizViewEl.style.display = "none";
+        resultsViewEl.style.display = "block";
+        
+        scoreDisplayEl.innerText = `${score} / ${questions.length}`;
+        
+        let percentage = (score / questions.length) * 100;
+        let msg = "";
+        if (percentage >= 90) {
+            msg = "¡Excelente dominio de la utilidad clínica y aplicaciones genéticas!";
+        } else if (percentage >= 70) {
+            msg = "¡Muy buen desempeño! Tienes claras las indicaciones de cada técnica.";
+        } else {
+            msg = "Buen intento. Repasa la utilidad específica y los contextos de indicación de cada herramienta.";
+        }
+        scoreMessageEl.innerText = msg;
+
+        reviewListEl.innerHTML = "";
+        questions.forEach((q, idx) => {
+            const userAns = userAnswers[idx];
+            const isCorr = userAns === q.correct;
+            const item = document.createElement("div");
+            item.className = `review-item ${isCorr ? 'is-correct' : 'is-incorrect'}`;
+            item.innerHTML = `
+                <strong>P${idx + 1}:</strong> ${q.question}<br>
+                <em>Tu respuesta:</em> ${userAns !== null ? q.options[userAns].text : 'Sin responder'} <br>
+                <em>Respuesta correcta:</em> ${q.options[q.correct].text}
+            `;
+            reviewListEl.appendChild(item);
+        });
+    }
+
+    function restartQuiz() {
+        currentQuestion = 0;
+        score = 0;
+        userAnswers = new Array(questions.length).fill(null);
+        resultsViewEl.style.display = "none";
+        quizViewEl.style.display = "block";
+        nextBtnEl.innerText = "Siguiente Pregunta";
+        loadQuestion();
+    }
+
+    loadQuestion();
+</script>
+
+</body>
+</html>
